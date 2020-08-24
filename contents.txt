@@ -1,0 +1,21 @@
+Texas Instruments C2000 Serial Flash Programmer Example Package
+
+
+This package contains software to demonstrate the use of the serial
+flash programmer. The contents are:
+
+    * f2837xD_fw_upgrade_example: A directory containing firmware upgrade kernel
+      and application (blinky). It includes the F2837xD serial boot loader 
+      format HEX files (.txt).
+    * f28004x_fw_upgrade_example: A directory containing firmware upgrade kernel
+      and application (blinky / led_ex1_blinky). It includes the F28004x serial boot loader 
+      format HEX files (.txt).
+    * serial_flash_programmer.exe: A command line program to load ASCII sci8 data in the
+      boot loader format to the device.
+    * serial_flash_programmer: A directory containing source code for serial_flash_programmer.exe 
+      and projects for Visual Studio 2019.
+	* contents.txt: This file.
+	* README.txt: Instructions for using serial_flash_programmer.exe.
+    * f2837xD_fw_upgrade_example.txt: Instructions for using serial_flash_programmer
+      to do an sci (uart) firmware upgrade on the F2837xD device.
+    * serial_flash_programmer.sln: Visual Studio solution for serial flash programmer.

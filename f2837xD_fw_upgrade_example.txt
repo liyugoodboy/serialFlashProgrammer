@@ -1,0 +1,63 @@
+Texas Instruments C2000 Serial Flash Programmer Example Package
+
+
+This file describes how to reproduce the firmware upgrade example for F2837xD CPU01
+and how the firmware upgrade works.
+
+    *The blinky example can be found in controlSuite in the
+    device_support/F2837xD/{version_number}/F2837xD_examples_Cpu1 directory.
+    *The fw_upgrade_sci_kernels example can be found in controlSuite in the
+    device_support/F2837xD/{version_number}/F2837xD_examples_Dual/cpu01 directory.
+
+The f2837xD_fw_upgrade_example directory contains the following files:
+
+	* blinky_cpu01.txt: An input data file for f28x7x_usb_loader.exe containing
+      the loadable sections of blinky_cpu01.out.
+	* blinky_cpu01.out: A CCS compiled and linked executable program for F2837x
+      which endlessly toggle GPIO31.
+	* F2837xD_sci_flash_kernels_cpu01.txt: An input data file for serial_flash_programmer.exe
+      containing the loadable sections of F2837xD_sci_flash_kernels_cpu01.out in the 
+      boot hex format.
+    * F2837xD_sci_flash_kernels_cpu01.out: The F2837xD flash kernel. A CCS compiled and linked 
+      executable program for F2837xD which can perform multiple functions including device 
+      firmware upgrade, erase sectors, unlock, verify flash contents, run, and reset.  This
+      kernel also has the ability to boot CPU2 to SCI boot mode to allow it to load a kernel
+      and perform the same functions.
+
+The .txt files were converted to the boot loader data format using hex2000, which
+is part of the C2000 Code Generation Tools package. The correct command line is:
+
+	hex2000.exe -boot -a -sci8 blinky_cpu01.out -o blinky_cpu01.txt
+	hex2000.exe -boot -a -sci8 F2837xD_sci_flash_kernels_cpu01.out -o F2837xD_sci_flash_kernels_cpu01.txt
+
+If everything was done correctly, blinky_cpu01.txt and F2837xD_sci_flash_kernels_cpu01.txt
+will now contain the loadable sections of the respective F2837xD executables in the correct format.
+
+How the firmware upgrade works:
+    The F2837xD is first put in SCI Boot Mode.  Then the serial_flash_programmer.exe connects to the F2837xD
+through a COM port and does a word by word data transfer of F2837xD_sci_flash_kernels_cpu01.txt to
+the F2837xD.  After this load completes, the F2837xD boot loader branches to the start address of
+the kernel just loaded in RAM.  This kernel then uses the SCI to wait for commands from the host PC.
+It has the ability load and program an application into flash, erase specific flash sectors, verify the 
+contents of the flash, unlock the dual security zones, run an application by branching to an address, 
+or reset the core with a watchdog time-out, or perform either a run or reset after booting CPU2 to 
+SCI boot mode.  To perform a device firmware upgrade by erasing and programming a flash application,
+we provide blinky_cpu01.txt which is the boot hex format of the executable for the blinky_cpu01 example in 
+controlSUITE.  This application must be compiled and linked to run from Flash so that the kernel can use the Flash API to
+upgrade the firmware in Flash. To perform the firmware upgrade follow the steps below.
+
+Procedure to Program Flash (DFU):
+    1) Boot the F2837xD in SCI Boot Mode.
+    2) Connect a serial port from the PC to the correct GPIO pins (dependent on sci boot mode 1 or 2)
+    3) From the Host command line:
+        serial_flash_programmer.exe  -d f2837xD -k F2837xD_sci_flash_kernels_cpu01.txt -a blinky_cpu01.txt -p COM7 -b 9600
+       This will download the flash kernel into RAM of the device using the SCI boot loader and beging executing
+       the kernel.  
+    4) Select Option 1 DFU for CPU1.
+    5) Select either Run CPU1 or Reset CPU1.
+    
+An Application Note should be released shortly to describe in more detail the flash kernels and its functions and 
+protocols to communicate with the host.
+
+
+
