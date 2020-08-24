@@ -7,9 +7,6 @@
 // way it does the kernel.  In both instances, the serial flash programmer
 // send one byte and the device echos back that same byte.
 //###########################################################################
-// $TI Release: F28X7X Support Library$
-// $Release Date: Octobe 23, 2014 $
-//###########################################################################
 
 #include "../include/f021_DownloadKernel.h"
 
@@ -88,26 +85,27 @@ clearBuffer(void)
 }
 
 //*****************************************************************************
-//
-// Locks baud rate.
-//
+//函数名称：autobandLock
+//函数说明：自动波特率锁定
+//输入参数：
+//返回参数：
 //*****************************************************************************
-void
-autobaudLock(void)
+void autobaudLock(void)
 {
+	//清除串口缓存
 	clearBuffer();
 	unsigned char sendData[8];
 	unsigned int rcvData = 0;
 	DWORD dwWritten;
 	DWORD dwRead;
 	sendData[0] = 'A';
-
+    //发送锁定字符
 	WriteFile(file, &sendData[0], 1, &dwWritten, NULL);
 	dwRead = 0;
 	while (dwRead == 0){
 		ReadFile(file, &rcvData, 1, &dwRead, NULL);
 	}
-
+    //锁定失败
 	if (sendData[0] != rcvData)
 	{
 		QUIETPRINT(_T("\n%lx"), sendData[0]);

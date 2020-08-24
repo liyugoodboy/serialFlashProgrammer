@@ -1,16 +1,10 @@
 //###########################################################################
-// FILE:   f021_DownloadIimage.cpp
-// TITLE:  Download Image function for f021 devices.
-//
-// This function is used to communicate and download with the device.  For 
-// F021 devices, the serial flash programmer sends the application the same
-// way it does the kernel.  In both instances, the serial flash programmer
-// send one byte and the device echos back that same byte.
+//文件名称：f021_DownloadIimage.cpp
+//文件说明：为f021设备下载程序功能。
+//         此功能用于与设备进行通信和下载。 对于F021器件，串行闪存编程器将相同的
+//         应用程序发送给应用程序它执行内核的方式。 在这两种情况下，串行闪存编程器
+//         发送一个字节，设备回显该相同字节。
 //###########################################################################
-// $TI Release: F28X7X Support Library$
-// $Release Date: Octobe 23, 2014 $
-//###########################################################################
-
 #include "../include/f021_DownloadImage.h"
 #include "../include/f021_DownloadKernel.h"
 #include "../include/f021_SendMessage.h"
@@ -27,7 +21,7 @@
 
 //*****************************************************************************
 //
-// Helpful macros for generating output depending upon verbose and quiet flags.
+// 调试信息输出
 //
 //*****************************************************************************
 #define VERBOSEPRINT(...) if(g_bVerbose) { _tprintf(__VA_ARGS__); }
@@ -35,7 +29,7 @@
 
 //*****************************************************************************
 //
-// Globals whose values are set or overridden via command line parameters.
+// 外部全局变量
 //
 //*****************************************************************************
 extern bool g_bVerbose;
@@ -56,19 +50,16 @@ extern wchar_t *g_pszComPort;
 extern wchar_t *g_pszBaudRate;
 extern wchar_t *g_pszDeviceName;
 
-//COM Port handles
+/**************************全局变量中端口句柄以及端口号************************/
 extern HANDLE file;
 extern DCB port;
-
 //*****************************************************************************
-//
-// External prototypes used by f021_DownloadImage()
-// These functions are declared in f021_DownloadKernel.cpp
-//
+//外部函数声明
 //*****************************************************************************
 extern void clearBuffer(void);
 extern void autobaudLock(void);
 extern void loadProgram(FILE *fh);
+/*********************************函数声明************************************/
 extern int f021_SendFunctionMessage(uint8_t message);
 int f021_DownloadImage(wchar_t* applicationFile);
 
