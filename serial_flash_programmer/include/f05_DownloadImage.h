@@ -1,17 +1,10 @@
 //###########################################################################
-// FILE:   f05_DownloadImage.h
-// TITLE:  Download Image function required for serial flash programmer.
-//
-// This function is used to communicate and download with the device.  For 
-// F05 devices, the serial flash programmer loads the kernel with a byte by
-// byte echo back.  When communicating the application to the kernel, it
-// works differently.  It sends chunks of the application and waits for 
-// a checksum of that data.
+//文件名称：f05_DownloadImage.cpp
+//文件说明：下载串行闪存编程器所需的应用功能。
+//         此功能用于与设备进行通信和下载。对于F05器件，串行闪存编程器将字节装入内
+//         核字节回显。在将应用程序与内核通信时，它的工作方式有所不同。 它发送应用
+//         程序的块并等待该数据的校验和。
 //###########################################################################
-// $TI Release: F28X7X Support Library$
-// $Release Date: Octobe 23, 2014 $
-//###########################################################################
-
 #ifndef __F05_DOWNLOADIMAGE__
 #define __F05_DOWNLOADIMAGE__
 

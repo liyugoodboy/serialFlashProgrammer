@@ -25,7 +25,7 @@ using namespace std;
 #include "include/f021_DownloadKernel.h"
 #include "include/f021_SendMessage.h"
 
-//Prototypes
+/**********************************函数声明************************************/
 void ExitApp(int iRetcode);
 void PrintWelcome(void);
 void ShowHelp(void);
@@ -35,8 +35,8 @@ void setEraseSector(unsigned int CPU, uint32_t Sector);
 void checkErrors(void);
 void getStatus(void);
 void printErrorStatus(uint16_t status);
-// formatting memory address output. Bug fix where 0x80000 would be shown as 80.
 uint32_t formatMemAddr(uint16_t firstHalf, uint16_t secondHalf);
+/********************************外部函数声明**********************************/
 extern void autobaudLock(void);
 extern int f021_DownloadImage(void);
 extern int f05_DownloadImage(void);
@@ -54,7 +54,7 @@ extern uint16_t getWord(void);
 
 //*****************************************************************************
 //
-// Helpful macros for generating output depending upon verbose and quiet flags.
+// 调试信息
 //
 //*****************************************************************************
 #define VERBOSEPRINT(...) if(g_bVerbose) { _tprintf(__VA_ARGS__); }
@@ -62,7 +62,7 @@ extern uint16_t getWord(void);
 
 //*****************************************************************************
 //
-// Globals whose values are set or overridden via command line parameters.
+// 全局变量
 //
 //*****************************************************************************
 bool g_bVerbose = false;
@@ -74,9 +74,7 @@ bool g_bBinary = false;
 bool g_bWaitOnExit = false;
 bool g_bReset = false;
 bool g_bSwitchMode = false;
-//
-//Device name
-//
+/**************************************设备号*********************************/
 bool g_bf2802x = false;
 bool g_bf2803x = false;
 bool g_bf2805x = false;
@@ -87,48 +85,35 @@ bool g_bf2837xS = false;
 bool g_bf2807x = false;
 bool g_bf28004x = false;
 
-//
-//type of Flash that will be used
-//
-bool g_bf021 = false;  //Kernel B, byte-by-byte checksum using status-packets.
-bool g_bf05 = false;  //Kernel A, byte-by-byte checksum, no status-packet.
+/***********************************FLASH类型*********************************/
+bool g_bf021 = false;  //内核B，逐字节校验和，使用状态包。
+bool g_bf05 = false;  //内核A，逐字节校验和，无状态包。
 
-//
-// Device Firmware Update function
-//
+/*****************************设备固件更新功能类型*****************************/
 bool g_bDFU = false;
 bool g_bDFU1 = false;
 bool g_bDFU2 = false;
 bool g_bDualCore = false;
 bool g_bDFU_branch = false;
-
-//
-//Erase function
-//
+/********************************扇区擦除功能**********************************/
 bool g_bErase1 = false;
 bool g_bErase2 = false;
 uint32_t gu32_SectorMask = 0xFFFFFFFF;
-uint32_t gu32_EraseSectors1 = 0U; //CPU1 going to send this twice. each bit represents a Sector
-uint32_t gu32_EraseSectors2 = 0U; //CPU2 going to send this twice. each bit represents a Sector
+uint32_t gu32_EraseSectors1 = 0U; //CPU1将发送两次。 每一位代表一个扇区
+uint32_t gu32_EraseSectors2 = 0U; //CPU2将发送两次。 每一位代表一个扇区
 
-//
-//Function from the command line
-//
+/*******************************命令行功能**************************************/
 uint32_t gu32_Function = 0U;
 uint16_t gu16_Command = 0U;
 
-//
-//Unlock variables
-//
+/********************************解锁功能***************************************/
 bool g_bUnlock = false;
 bool g_bUnlockZ1 = false;
 bool g_bUnlockZ2 = false;
 uint32_t gu32_Z1Password[4] = { 0xFFFFFFFF };
 uint32_t gu32_Z2Password[4] = { 0xFFFFFFFF };
 
-//
-//String names
-//
+/**************************文件类相关路径字符串*********************************/
 wchar_t *g_pszAppFile = NULL;
 wchar_t *g_pszAppFile2 = NULL;
 wchar_t *g_pszKernelFile = NULL;
@@ -137,15 +122,10 @@ wchar_t *g_pszComPort = NULL;
 wchar_t *g_pszBaudRate;
 wchar_t *g_pszDeviceName = NULL;
 
-//
-//COM Port stuff
-//
+/**********************************端口*****************************************/
 HANDLE file;
 DCB port;
 
-//
-// Defines
-//
 #define DFU_CPU1					0x0100
 #define DFU_CPU2					0x0200
 #define ERASE_CPU1					0x0300
@@ -193,7 +173,7 @@ _tmain(int argc, TCHAR* argv[])
 	}
 
 	//
-	//Open the comm port.
+	//开启端口
 	//
 	int iRetCode = 0;
 	TCHAR baudString[32];
@@ -259,23 +239,18 @@ _tmain(int argc, TCHAR* argv[])
 	uint32_t packetLength;
 
 	/***********************************************************************/
-	if (g_bf021 == true && g_bf2837xD == true) //F021
+	if (g_bf021 == true && g_bf2837xD == true) //F021内核
 	{
-		//
-		// Download the Kernel
-		//
+        //下载核心文件
 #ifdef kernel
 		_tprintf(_T("\ncalling f021_DownloadKernel CPU1 Kernel\n"));
 		iRetCode = f021_DownloadKernel(g_pszKernelFile);  
 #endif 
 
-		// added for delay (diff repo/curr copy).
 		Sleep(6);
 
-		//
-		// COM port is open
-		//
-		// Do AutoBaud
+		//确保端口已经成功打开
+		//自动波特率锁定
 		VERBOSEPRINT(_T("\nAttempting autobaud to send function message..."));
 		autobaudLock();
 
@@ -288,6 +263,7 @@ _tmain(int argc, TCHAR* argv[])
 		uint16_t length = 0;
 		string sector;
 		uint32_t branchAddress = 0;
+		//选择功能
 		while (!done)
 		{
 			_tprintf(_T("\nWhat operation do you want to perform?\n"));
@@ -325,12 +301,14 @@ _tmain(int argc, TCHAR* argv[])
 					cout << "ERROR: Cannot perform operations on CPU1 after CPU2 is booted and given control of SCI!" << endl;
 					break;
 				}
+				//编码命令包
 				packetLength = constructPacket(packet, (uint16_t)DFU_CPU1, 0, NULL);
 				_tprintf(_T("\ncalling f021_SendPacket\n"));
+				//发送命令包
 				iRetCode = f021_SendPacket(packet, packetLength); //-1 means NACK, 0 means ACK
-
+                //发送应用程序文件
 				iRetCode = f021_DownloadImage(g_pszAppFile);
-
+                //获取命令包
 				command = getPacket(&length, data);
 				if (command != DFU_CPU1)
 				{
@@ -1127,58 +1105,46 @@ _tmain(int argc, TCHAR* argv[])
 }
 
 //*****************************************************************************
-//
-// Exit the application, optionally pausing for a key press first.
+//函数名称：
+// 退出应用程序，可以选择先暂停按键。
 //
 //*****************************************************************************
-void
-ExitApp(int iRetcode)
+void ExitApp(int iRetcode)
 {
-	//
-	// Has the caller asked us to pause before exiting?
-	//
+    //判断配置信息：退出程序是否等待按键
 	if (g_bWaitOnExit)
 	{
 		_tprintf(_T("\nPress any key to exit...\n"));
 		while (!_kbhit())
 		{
-			//
-			// Wait for a key press.
-			//
+			//等待任意按键
 		}
-	}
-
+	}   
 	exit(iRetcode);
 }
 
 //*****************************************************************************
 //
-// Display the welcome banner when the program is started.
+// 打印欢迎信息
 //
 //*****************************************************************************
-void
-PrintWelcome(void)
+void PrintWelcome(void)
 {
 	if (g_bQuiet)
 	{
 		return;
 	}
-
 	_tprintf(_T("\nC2000 Serial Firmware Upgrader\n"));
 	_tprintf(_T("Copyright (c) 2013 Texas Instruments Incorporated.  All rights reserved.\n\n"));
 }
 
 //*****************************************************************************
 //
-// Show help on the application command line parameters.
+// 在应用程序命令行参数上显示帮助。
 //
 //*****************************************************************************
-void
-ShowHelp(void)
+void ShowHelp(void)
 {
-	//
-	// Only print help if we are not in quiet mode.
-	//
 	if (g_bQuiet)
 	{
 		return;
@@ -1213,13 +1179,12 @@ ShowHelp(void)
 
 //*****************************************************************************
 //
-// Parse the command line, extracting all parameters.
+//解析命令行，提取所有参数。
 //
-// Returns 0 on success. On failure, calls ExitApp(1).
+//成功返回0。 失败时，调用ExitApp（1）。
 //
 //*****************************************************************************
-int
-ParseCommandLine(int argc, wchar_t *argv[])
+int ParseCommandLine(int argc, wchar_t *argv[])
 {
 	int iParm;
 	bool bShowHelp;
@@ -1344,7 +1309,7 @@ ParseCommandLine(int argc, wchar_t *argv[])
 	
 	return(0);
 }
-
+//解析设备名称
 void setDeviceName(void)
 {
 	//
@@ -1420,7 +1385,7 @@ void setDeviceName(void)
 	}
     return;
 }
-
+//擦除扇区
 void setEraseSector(unsigned int CPU, uint32_t Sector)
 {
 	//get the correct EraseSectors variable
@@ -1472,7 +1437,7 @@ void setEraseSector(unsigned int CPU, uint32_t Sector)
 	}
 	return;
 }
-
+//错误检查
 void checkErrors(void)
 {
 	//
@@ -1499,7 +1464,7 @@ void checkErrors(void)
 		QUIETPRINT(_T("ERROR: No COM port number was specified. Please use -p to provide one.\n"));
 	}
 }
-
+//打印错误状态
 void printErrorStatus(uint16_t status)
 {
 	switch (status)
@@ -1527,7 +1492,7 @@ void printErrorStatus(uint16_t status)
 
 //*****************************************************************************
 //
-// Memory address output bug fix. ex) 80 -> 0x80000
+// 内存地址输出错误修复。 例如）80-> 0x80000
 //
 //*****************************************************************************
 uint32_t formatMemAddr(uint16_t firstHalf, uint16_t secondHalf) {

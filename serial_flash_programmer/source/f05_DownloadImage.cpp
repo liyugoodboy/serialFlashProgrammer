@@ -1,15 +1,9 @@
 //###########################################################################
-// FILE:   f05_DownloadImage.cpp
-// TITLE:  Download Image function required for serial flash programmer.
-//
-// This function is used to communicate and download with the device.  For 
-// F05 devices, the serial flash programmer loads the kernel with a byte by
-// byte echo back.  When communicating the application to the kernel, it
-// works differently.  It sends chunks of the application and waits for 
-// a checksum of that data.
-//###########################################################################
-// $TI Release: F28X7X Support Library$
-// $Release Date: Octobe 23, 2014 $
+//文件名称：f05_DownloadImage.cpp
+//文件说明：下载串行闪存编程器所需的应用功能。
+//         此功能用于与设备进行通信和下载。对于F05器件，串行闪存编程器将字节装入内
+//         核字节回显。在将应用程序与内核通信时，它的工作方式有所不同。 它发送应用
+//         程序的块并等待该数据的校验和。
 //###########################################################################
 
 #include "../include/f05_DownloadImage.h"
@@ -26,7 +20,7 @@
 
 //*****************************************************************************
 //
-// Helpful macros for generating output depending upon verbose and quiet flags.
+//帮助信息输出
 //
 //*****************************************************************************
 #define VERBOSEPRINT(...) if(g_bVerbose) { _tprintf(__VA_ARGS__); }
@@ -34,7 +28,7 @@
 
 //*****************************************************************************
 //
-// Globals whose values are set or overridden via command line parameters.
+// 全局变量
 //
 //*****************************************************************************
 extern bool g_bVerbose;
@@ -55,21 +49,18 @@ extern wchar_t *g_pszComPort;
 extern wchar_t *g_pszBaudRate;
 extern wchar_t *g_pszDeviceName;
 
-//COM Port handles
+/*********************************端口信息*************************************/
 extern HANDLE file;
 extern DCB port;
-
 //*****************************************************************************
-//
-// Download an image to the the device identified by the passed handle.  The
-// image to be downloaded and other parameters related to the operation are
-// controlled by command line parameters via global variables.
-//
-// Returns 0 on success or a positive error return code on failure.
-//
+//函数名称：f05_DownloadImage
+//函数说明：将图像下载到通过传递的句柄标识的设备。 命令行参数通过全局变量控制要下载的
+//          图像和与操作有关的其他参数。
+//         注：此函数流程：内核下载-->应用程序下载
+//输入参数：
+//返回参数：成功返回0，失败则返回正错误。
 //*****************************************************************************
-int
-f05_DownloadImage(void)
+int f05_DownloadImage(void)
 {
 	FILE *Kfh;
 	FILE *Afh;
@@ -87,10 +78,7 @@ f05_DownloadImage(void)
 	
 	QUIETPRINT(_T("Downloading %s to device...\n"), g_pszAppFile);
 
-	//
-	// Does the input file exist?
-	//
-	// Opens the Flash Kernel File
+	//打开核心文件
 	error = _wfopen_s(&Kfh, g_pszKernelFile, _T("rb"));
 
 	if (!Kfh)
@@ -99,7 +87,7 @@ f05_DownloadImage(void)
 		return(10);
 	}
 
-    //Opens the application file 
+    //打开应用程序文件
 	error = _wfopen_s(&Afh, g_pszAppFile, L"rb");
 
 	if (!Afh)
@@ -107,10 +95,8 @@ f05_DownloadImage(void)
 		QUIETPRINT(_T("Unable to open Application file %s. Does it exist?\n"), g_pszAppFile);
 		return(10);
 	}
-
-	//Both Kernel, Application, and COM port are open
 	
-	//Do AutoBaud
+	//自动波特率锁定
  	dwRead = 0;
 	sendData[0] = 'A';
 
@@ -125,7 +111,8 @@ f05_DownloadImage(void)
 
 
 	VERBOSEPRINT(_T("\nKernel AutoBaud Successful"));
-	//Find the start of the kernel data
+	
+	//下载核心文件
 	getc(Kfh);
 	getc(Kfh);
 	getc(Kfh);
@@ -136,22 +123,23 @@ f05_DownloadImage(void)
 	{
 		i++;
 		QUIETPRINT(_T("\n%lx"), sendData[0]);
-		//Send next char
+		//发送字符
 		WriteFile(file, &sendData[0], 1, &dwWritten, NULL);
 
 		dwRead = 0;
+		//读取回显字符
 		while (dwRead == 0)
 		{
 			ReadFile(file, &rcvData, 1, &dwRead, NULL);
 		}
 		QUIETPRINT(_T("==%lx"), rcvData);
-		//Ensure data matches
+		//字符对比校验
 		if (sendData[0] != rcvData){
 			VERBOSEPRINT(_T("\nData does not match... Please press Ctrl-C to abort."));
 			while (1){}
 		}
 
-		//Read next char
+		//从文件中读取下一个字符
 		fileStatus = fscanf_s(Kfh, "%x", &sendData[0]);
 	}
 
@@ -163,7 +151,7 @@ f05_DownloadImage(void)
 	PurgeComm(file, PURGE_RXCLEAR);
 
 
-	//Do AutoBaud
+	//自动波特率锁定
 	sendData[0] = 'A';
 
     WriteFile(file, &sendData[0], 1, &dwWritten, NULL);
@@ -185,7 +173,7 @@ f05_DownloadImage(void)
 
 	Sleep(3000);
 
-	//Find the start of the application data
+	//发送应用程序文件
 	txCount = 0;
 	checksum = 0;
 
@@ -198,7 +186,7 @@ f05_DownloadImage(void)
 		txCount++;
 		fscanf_s(Afh, "%x", &sendData[0]);
 		checksum += sendData[0];
-		//Send next char
+		//发送字符
         WriteFile(file, &sendData[0], 1, &dwWritten, NULL);
 
 	}
@@ -213,7 +201,7 @@ f05_DownloadImage(void)
 		ReadFile(file, &rcvDataH, 1, &dwRead, NULL);
 	}
 
-	//Ensure checksum matches
+	//和校验
 	if (checksum != (rcvData | (rcvDataH << 8)))
 		return(12);
 
@@ -227,7 +215,7 @@ f05_DownloadImage(void)
 	byteData = 0x0000;
 	fileStatus = 1;
 
-	//Load the flash application
+	//下载应用程序文件
 	while (1){
 
 		fileStatus = fscanf_s(Afh, "%x ", &sendData[0]);
@@ -238,7 +226,7 @@ f05_DownloadImage(void)
 
 		checksum += sendData[0];
 
-		// Get block size
+		//获取块大小信息
 		if (txCount == 0x00)
 		{
 			wordData = sendData[0];
@@ -246,14 +234,14 @@ f05_DownloadImage(void)
 		else if (txCount == 0x01)
 		{
 			byteData = sendData[0];
-			// form the wordData from the MSB:LSB
+			//MSB:LSB
 			wordData |= (byteData << 8);
 		}
 
 		txCount++;
 		totalCount++;
 
-		//If the next block size is 0, exit the while loop. 
+		//如果下一个块大小为0，则退出while循环。
 		if (wordData == 0x00 && txCount > 1)
 		{
 
@@ -262,7 +250,7 @@ f05_DownloadImage(void)
 
 			break;
 		}
-		// will execute when all the data in the block has been sent
+		//发送块中的所有数据后将执行
 		else if (txCount == 2 * (wordData + 3))
 		{
 			dwRead = 0;
@@ -275,7 +263,7 @@ f05_DownloadImage(void)
 			{				
 				ReadFile(file, &rcvDataH, 1, &dwRead, NULL);
 			}
-			//Ensure checksum matches
+			//校验和
 			if (checksum != (rcvData | (rcvDataH << 8)))
 				return(12);
 			else
@@ -285,7 +273,7 @@ f05_DownloadImage(void)
 			byteData = 0x0000;
 			txCount = 0x00;
 		}
-		// will execute when the flash kernel buffer is full (0x400 words == 0x800 bytes)
+		//将在Flash内核缓冲区已满（0x400字== 0x800字节）时执行
 		else if ((txCount - 6) % 0x800 == 0 && txCount > 6)
 		{
 			dwRead = 0;
@@ -298,15 +286,14 @@ f05_DownloadImage(void)
 			{
 				ReadFile(file, &rcvDataH, 1, &dwRead, NULL);
 			}
-			//Ensure checksum matches
+			//校验和
 			if (checksum != (rcvData | (rcvDataH << 8)))
 				return(12);
 			else
 				checksum = 0;
-		}
-		
+		}		
 	}
+	//显示下载成功提示
 	VERBOSEPRINT(_T("\nApplication Load Successful"));
-
     return 0;
 }
