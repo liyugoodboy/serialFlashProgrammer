@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30330.147
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "serialFlashProgrammer", "serialFlashProgrammer.vcxproj", "{25BBC339-F62A-40E3-91D9-94FE89E13B5D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{25BBC339-F62A-40E3-91D9-94FE89E13B5D}.Debug|x64.ActiveCfg = Debug|x64
+		{25BBC339-F62A-40E3-91D9-94FE89E13B5D}.Debug|x64.Build.0 = Debug|x64
+		{25BBC339-F62A-40E3-91D9-94FE89E13B5D}.Release|x64.ActiveCfg = Release|x64
+		{25BBC339-F62A-40E3-91D9-94FE89E13B5D}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7D5E52B6-6E24-4B85-8DBB-B8054F8A0B2F}
+	EndGlobalSection
+EndGlobal

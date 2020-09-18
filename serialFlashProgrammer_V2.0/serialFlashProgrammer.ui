@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>serialFlashProgrammerClass</class>
+ <widget class="QWidget" name="serialFlashProgrammerClass">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>667</width>
+    <height>683</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>serialFlashProgrammer</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QFormLayout" name="formLayout">
+     <item row="1" column="0">
+      <widget class="QPushButton" name="btn_selectProgramFile">
+       <property name="text">
+        <string>选择CPU1程序文件</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="lineEdit">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QPushButton" name="pushButton_3">
+       <property name="text">
+        <string>选择CPU1内核文件</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="lineEdit_2">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QPushButton" name="pushButton">
+       <property name="text">
+        <string>选择CPU2内核文件</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="lineEdit_3">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QPushButton" name="btn_selectProgramFile1">
+       <property name="text">
+        <string>选择CPU2程序文件</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLineEdit" name="lineEditPrg1FilePath">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="2">
+      <widget class="QPushButton" name="btn_portSearch">
+       <property name="maximumSize">
+        <size>
+         <width>30</width>
+         <height>30</height>
+        </size>
+       </property>
+       <property name="autoFillBackground">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string extracomment="搜索"/>
+       </property>
+       <property name="icon">
+        <iconset resource="serialFlashProgrammer.qrc">
+         <normaloff>:/icon/icon/search.png</normaloff>:/icon/icon/search.png</iconset>
+       </property>
+       <property name="autoRepeat">
+        <bool>false</bool>
+       </property>
+       <property name="autoExclusive">
+        <bool>false</bool>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
+       <property name="flat">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="cbox_port"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>端口号:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>波特率：</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="6">
+      <widget class="QPushButton" name="btn_openPart">
+       <property name="text">
+        <string>打开串口</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="4">
+      <widget class="QComboBox" name="cbox_baud"/>
+     </item>
+     <item row="0" column="5">
+      <widget class="QCheckBox" name="bandSelectCheckBox">
+       <property name="maximumSize">
+        <size>
+         <width>20</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="tristate">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="0" column="7">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>入口地址(16进制)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>设备：</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QComboBox" name="cbox_core"/>
+     </item>
+     <item row="0" column="6">
+      <widget class="QComboBox" name="cbox_function"/>
+     </item>
+     <item row="0" column="4">
+      <widget class="QComboBox" name="cbox_device"/>
+     </item>
+     <item row="0" column="5">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>功能选择：</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>内核：</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="8">
+      <widget class="QLineEdit" name="enterAddrLineEdit"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout_3">
+     <item row="2" column="2">
+      <widget class="QCheckBox" name="checkBox_3">
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
+       <property name="text">
+        <string>详细数据信息输出</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QCheckBox" name="checkBox_2">
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
+       <property name="text">
+        <string>升级完成后自动运行</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QCheckBox" name="checkBox">
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
+       <property name="text">
+        <string>详细信息输出</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="3">
+      <widget class="QPushButton" name="btn_cleanMessage">
+       <property name="text">
+        <string>清除输出信息</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QPushButton" name="btn_execute">
+     <property name="text">
+      <string>执行</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QProgressBar" name="progressBar">
+     <property name="value">
+      <number>24</number>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTextBrowser" name="textBrowser"/>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources>
+  <include location="serialFlashProgrammer.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>cbox_device</sender>
+   <signal>activated(QString)</signal>
+   <receiver>serialFlashProgrammerClass</receiver>
+   <slot>vn_cbox_device_activated(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>296</x>
+     <y>213</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>412</x>
+     <y>114</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btn_execute</sender>
+   <signal>clicked()</signal>
+   <receiver>serialFlashProgrammerClass</receiver>
+   <slot>vn_btn_execute_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>455</x>
+     <y>288</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>524</x>
+     <y>148</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>enterAddrLineEdit</sender>
+   <signal>editingFinished()</signal>
+   <receiver>serialFlashProgrammerClass</receiver>
+   <slot>vn_lineEdit_enterAddr_editingFinished()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>654</x>
+     <y>215</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>760</x>
+     <y>210</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>bandSelectCheckBox</sender>
+   <signal>stateChanged(int)</signal>
+   <receiver>serialFlashProgrammerClass</receiver>
+   <slot>vn_checkBox_bandStatus_stateChange(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>537</x>
+     <y>175</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>605</x>
+     <y>185</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btn_cleanMessage</sender>
+   <signal>clicked()</signal>
+   <receiver>serialFlashProgrammerClass</receiver>
+   <slot>vn_btn_cleanMessage_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>618</x>
+     <y>246</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>662</x>
+     <y>249</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>on_btn_portSearch_clicked()</slot>
+  <slot>on_btn_openPart_clicked()</slot>
+  <slot>vn_cbox_device_activated(QString)</slot>
+  <slot>vn_btn_execute_clicked()</slot>
+  <slot>vn_lineEdit_enterAddr_editingFinished()</slot>
+  <slot>vn_checkBox_bandStatus_stateChange(int)</slot>
+  <slot>vn_btn_cleanMessage_clicked()</slot>
+ </slots>
+</ui>
