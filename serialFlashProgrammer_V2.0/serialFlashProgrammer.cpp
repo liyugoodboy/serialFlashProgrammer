@@ -13,14 +13,15 @@
 #include <qfiledialog.h>
 #include <QtSerialPort/qserialport.h>
 #include <QtSerialPort/qserialportinfo.h>
+#include <qdatetime.h>
+#include <qtoolbutton.h>
 #include <qmessagebox.h>
 #include <qevent.h>
 #include <qmenu.h>
 #include <qaction.h>
 #include <iostream>
-
+#include <qtoolbar.h>
 #include <windows.h>
-//#include <wtypes.h>
 
 //解决中文乱码
 #if _MSC_VER >= 1600	
@@ -30,6 +31,7 @@
 //增加标题栏右键菜单关于项
 #pragma comment(lib, "User32.lib")
 #define IDM_ABOUTBOX 0x0010
+
 /************************************************************************
 * 函数名称：serialFlashProgrammer
 * 函数说明：构造函数
@@ -43,6 +45,7 @@ serialFlashProgrammer::serialFlashProgrammer(QWidget* parent)
 	//界面绘制
 	ui.setupUi(this);
 	//变量初始化
+
 	//入口地址输入框初始化
 	ui.enterAddrLineEdit->setText(APP_ERTER_ADDRESS);
 	ui.enterAddrLineEdit->setEnabled(false);
@@ -77,8 +80,7 @@ serialFlashProgrammer::serialFlashProgrammer(QWidget* parent)
 	ui.cbox_function->addItem("运行CPU2", QVariant(RUN_CPU2));
 	ui.cbox_function->addItem("重置CPU2", QVariant(RESET_CPU2));
 	//输出欢迎信息
-	outputMessage("C2000 Serial Firmware Upgrader");
-	outputMessage("Copyright (c) 2013 Texas Instruments Incorporated.  All rights reserved.");
+	outputMessage(WELCOME_TEXT, MSG_TEXT);
 	//扫描端口信息显示到界面上
 	scanComPort();
 	//设置波特率
@@ -248,7 +250,7 @@ void serialFlashProgrammer::on_btn_openPart_clicked()
 		//检查端口选择下拉框有没有设备项
 		if (ui.cbox_port->count() == 0)
 		{
-			outputMessage(QString("没有端口设备"));
+			outputMessage(QString("开启失败，未选择正确串口"),MSG_ERROR |MSG_WITH_TIME);
 			return;
 		}
 		//设置端口号
@@ -270,14 +272,15 @@ void serialFlashProgrammer::on_btn_openPart_clicked()
 		g_pszBaudRate = m_baudRate;
 		//开启端口
 		int ret = openCom();
+
 		//判断是否开启成功
 		if (ret == 0)
 		{
-			outputMessage(QString("串口开启失败"));
+			outputMessage(QString("串口开启失败"), MSG_ERROR | MSG_WITH_TIME);
 		}
 		else
 		{
-			outputMessage(QString("串口开启成功"));
+			outputMessage(QString("串口开启成功"), MSG_TEXT | MSG_WITH_TIME);
 			ui.btn_openPart->setText("关闭串口");
 			//禁止端口及波特率选择以及扫描
 			ui.cbox_port->setEnabled(false);
@@ -299,7 +302,7 @@ void serialFlashProgrammer::on_btn_openPart_clicked()
 	    //判断是否关闭成功
 		if (rtn == 0)
 		{
-			outputMessage(QString("串口关闭失败"));
+			outputMessage(QString("串口关闭失败"), MSG_ERROR | MSG_WITH_TIME);
 		}
 		else
 		{
@@ -466,7 +469,7 @@ void serialFlashProgrammer::vn_btn_execute_clicked()
 		//检查串口是否打开
 		if (m_comStatus == false)
 		{
-			outputMessage(QString("串口未打开，功能未执行"));
+			outputMessage(QString("串口未打开，功能未执行"), MSG_ERROR | MSG_WITH_TIME);
 			return;
 		}
 		//检查设备
@@ -479,7 +482,7 @@ void serialFlashProgrammer::vn_btn_execute_clicked()
 		//检查升级线程是否在运行
 		if (workerThread.isRunning() == false)
 		{
-			outputMessage(QString("升级线程未运行，请重启软件"));
+			outputMessage(QString("升级线程未运行，请重启软件"), MSG_ERROR | MSG_WITH_TIME);
 			return;
 		}
 		//获取功能码
@@ -584,7 +587,7 @@ void serialFlashProgrammer::appFileMessage(QString name,appFileInfo* info)
 	QFile programFile(name);
 	if (!programFile.open(QIODevice::ReadOnly | QIODevice::Text))
 	{
-		qDebug() << programFile.errorString();
+		std::cout << programFile.errorString().toStdString() << endl;
 	}
 	//设置文本流
 	QTextStream in(&programFile);
@@ -629,10 +632,15 @@ void serialFlashProgrammer::appFileMessage(QString name,appFileInfo* info)
 		array[1] = array[1] << 24;
 		array[3] = array[3] << 8;
 		blackAddr = array[0] + array[1] + array[2] + array[3];
-		//校验地址
-		if (blackAddr < 0x84000)
+		//数据地址与booltloader2程序段冲突
+		if (blackAddr < 0x84000 && blackAddr > 0x80000)
 		{
-			std::cout << "应用程序存储分配和bootloader存储区冲突" << std::endl;
+			outputMessage("应用程序存储分配和bootloader存储区冲突，无法进行升级", MSG_ERROR | MSG_WITH_TIME);
+		}
+		//数据块在RAM区
+		if (blackAddr < 0x80000)
+		{
+			outputMessage("应用程序数据在RAM区，RAM部分不会被下载，请检查应用程序", MSG_ERROR | MSG_WITH_TIME);
 		}
 		//块信息后位置
 		qDebug() << in.pos();
@@ -650,8 +658,7 @@ void serialFlashProgrammer::appFileMessage(QString name,appFileInfo* info)
 	//判断是否到达最大块数量
 	if (blackNumber > MAX_BLACK_NUMBER)
 	{
-		qDebug() << "the blackNumber Exceeds the maximum" << endl;
-		outputMessage(QString("程序信息中块数据超过可读最大值，信息读取失败"));
+		outputMessage(QString("程序信息中块数据超过可读最大值，信息读取失败"), MSG_ERROR|MSG_WITH_TIME);
 	}
 	//保存数据
 	info->appEnterAddress = addr;
@@ -659,14 +666,14 @@ void serialFlashProgrammer::appFileMessage(QString name,appFileInfo* info)
 	info->allBlockSize = allBlackSize;
 	info->estimatedTime = (float)allBlackSize * 100 / 115200;
 	//输出显示信息
-	outputMessage(QString("******************程序信息*****************"));
-	outputMessage(QString("程序路径：") + info->appFileDir);
-	outputMessage(QString("程序名称：") + info->appFileName);
-	outputMessage(QString("_c_int00:0x%1").arg(addr, 4, 16, QLatin1Char('0')));
-	outputMessage(QString("块数量:%1").arg(blackNumber));
-	outputMessage(QString("数据总大小:%1").arg(allBlackSize));
-	outputMessage(QString("预计下载用时:%1s").arg(info->estimatedTime,3));
-	outputMessage(QString("*******************************************"));
+	outputMessage(QString("******************程序信息*****************"),MSG_TEXT);
+	outputMessage(QString("程序路径：") + info->appFileDir, MSG_TEXT);
+	outputMessage(QString("程序名称：") + info->appFileName, MSG_TEXT);
+	outputMessage(QString("_c_int00:0x%1").arg(addr, 4, 16, QLatin1Char('0')), MSG_TEXT);
+	outputMessage(QString("块数量:%1").arg(blackNumber), MSG_TEXT);
+	outputMessage(QString("数据总大小:%1").arg(allBlackSize), MSG_TEXT);
+	outputMessage(QString("预计下载用时:%1s").arg(info->estimatedTime,3), MSG_TEXT);
+	outputMessage(QString("*******************************************"), MSG_TEXT);
 	programFile.close();
 }
 /************************************************************************
@@ -678,14 +685,22 @@ void serialFlashProgrammer::appFileMessage(QString name,appFileInfo* info)
 *************************************************************************/
 void serialFlashProgrammer::scanComPort()
 {
-	outputMessage(QString("扫描端口设备"));
+	outputMessage(QString("扫描端口设备"),MSG_CMD | MSG_WITH_TIME);
 	ui.cbox_port->clear();
+	qint16 count = 0;
 	//遍历端口信息
 	foreach(const QSerialPortInfo & info, QSerialPortInfo::availablePorts())
 	{
-		outputMessage(QString("端口:") + info.portName());
-		outputMessage(QString("设备名称:") + info.description());
+		count++;
+		outputMessage(QString("设备%1:").arg(count), MSG_TEXT);
+		outputMessage(QString("端口:") + info.portName(), MSG_TEXT);
+		outputMessage(QString("设备名称:") + info.description(), MSG_TEXT);
 		ui.cbox_port->addItem(info.portName());
+	}
+	//未扫描到端口
+	if (count == 0)
+	{
+		outputMessage(QString("未扫描到任何串口设备"),MSG_WARNING | MSG_WITH_TIME);
 	}
 }
 /************************************************************************
@@ -693,11 +708,42 @@ void serialFlashProgrammer::scanComPort()
 * 函数说明：信息输出
 * 功能说明：
 * 输入参数：
+*           qint16    type    消息类型
+*           QString   str     输出信息
 * 返回参数：
 *************************************************************************/
-void serialFlashProgrammer::outputMessage(QString str)
+void serialFlashProgrammer::outputMessage(QString str,qint16 type)
 {
-	ui.textBrowser->insertPlainText(str.append("\r\n"));
+	QDateTime current_date_time = QDateTime::currentDateTime();
+	QString current_date = current_date_time.toString("yyyy.MM.dd hh:mm:ss") + "    ";
+	QString color_end = "</font>";
+	QString color_start;
+	bool showTime = false;
+
+	if ((type & MSG_WITH_TIME) > 0)
+	{
+		showTime = true;
+		type = type & (~MSG_WITH_TIME);
+	}
+	else
+	{
+		showTime = false;
+		current_date.clear();
+	}
+	switch (type)
+	{
+	    case MSG_TEXT:
+			color_start = "<font color=\"#000000\">";break;
+	    case MSG_CMD:
+			color_start = "<font color=\"#000000\">";str = ">>" + str; break;
+		case MSG_WARNING:
+			color_start = "<font color=\"#0000FF\">";str = "WARNING:" + str; break;
+
+		case MSG_ERROR:
+			color_start = "<font color=\"#FF0000\">";str = "ERROR:" + str; break;
+	}
+	std::cout << current_date.toStdString() << str.toStdString() << std::endl;
+	ui.textBrowser->append(current_date + color_start + str + color_end);
 }
 /************************************************************************
 * 函数名称：

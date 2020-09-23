@@ -1487,7 +1487,7 @@ int SerialFlash::function_DFU_CPU1()
 	iRetCode = f021_DownloadImage(g_pszAppFile);
 	//获取命令包
 	uint16_t command = 0;
-	uint16_t data[10];
+	uint16_t data[20];
 	uint16_t length = 0;
 	command = getPacket(&length, data);
 	if (command != DFU_CPU1)

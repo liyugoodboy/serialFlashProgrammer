@@ -59,9 +59,6 @@
     <ClCompile Include="flashProgramer\source\serialFlash.cpp">
       <Filter>Form Files\flashProgrammer</Filter>
     </ClCompile>
-    <ClCompile Include="MainWindow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="flashProgramer\include\f05_DownloadImage.h">
@@ -94,13 +91,5 @@
     <QtMoc Include="flashProgramer\include\serialFlash.h">
       <Filter>Form Files\flashProgrammer</Filter>
     </QtMoc>
-    <QtMoc Include="MainWindow.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-  </ItemGroup>
-  <ItemGroup>
-    <QtUic Include="MainWindow.ui">
-      <Filter>Resource Files</Filter>
-    </QtUic>
   </ItemGroup>
 </Project>

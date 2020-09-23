@@ -6,10 +6,24 @@
 #include <qtimer.h>
 #include "./flashProgramer/include/serialFlash.h"
 #include "ui_serialFlashProgrammer.h"
+
+
+
 #define PRG_FILE_NAME      "program.txt"
 #define PRG_FILE1_NAME     "program1.txt"
-#define APP_ERTER_ADDRESS  "84000"
-#define MAX_BLACK_NUMBER   100            //允许数据块的数量
+#define APP_ERTER_ADDRESS  "84000"         //APP程序入口地址  
+#define MAX_BLACK_NUMBER   100             //允许APP数据块的最大数量
+
+//消息类型
+#define MSG_TEXT           0x01            //文本
+#define MSG_CMD            0x02            //命令
+#define MSG_ERROR          0x04            //错误
+#define MSG_WARNING        0x08            //警告
+#define MSG_WITH_TIME      0x10            //带时间信息
+
+//消息文本
+#define WELCOME_TEXT  "*******************  C2000串口升级程序  *******************"
+
 class serialFlashProgrammer : public QWidget
 {
     Q_OBJECT
@@ -27,7 +41,7 @@ public:
     ~serialFlashProgrammer();
     void programToSci8(QString path,QString programName);
     void appFileMessage(QString name, appFileInfo* info);
-    void outputMessage(QString str);
+    void outputMessage(QString str,qint16 type = MSG_TEXT | MSG_WITH_TIME);
     void scanComPort();
     bool nativeEvent(const QByteArray& eventType, void* message, long* result);
 private slots:

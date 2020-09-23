@@ -1,0 +1,3 @@
+# serialFlashProgrammer
+
+TI C2000系列串口升级工程，包含上位机源码及打包可执行文件,双核bootloader二次引导程序工程，升级示例APP应用程序工程。

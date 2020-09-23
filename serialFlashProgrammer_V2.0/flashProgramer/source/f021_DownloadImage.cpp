@@ -89,7 +89,7 @@ int f021_DownloadImage(wchar_t* applicationFile);
 #include <assert.h>
 void loadProgram_checksum(FILE *fh)
 {
-	unsigned char sendData[8];
+	unsigned char sendData[20];
 	unsigned int fileStatus;
 	unsigned int rcvData = 0;
 	DWORD dwRead;
@@ -139,6 +139,240 @@ void loadProgram_checksum(FILE *fh)
 		while (1){}
 	}
 	unsigned int blockCount = 0;
+	unsigned int blockSize;
+	unsigned long destAddr;
+	bool blockEffective;
+	while (fileStatus == 1)
+	{
+		//读取下一个数据块大小（字）从hex2000转换出的文件
+		fileStatus = fscanf_s(fh, "%x", &sendData[0]); //LSB
+		fileStatus = fscanf_s(fh, "%x", &sendData[1]); //MSB
+		blockSize = (sendData[1] << 8) | sendData[0];
+		//如果块大小为0,则文件结束
+		if (blockSize == 0x0000) 
+		{
+			//发送块大小LSB
+			WriteFile(file, &sendData[0], 1, &dwWritten, NULL);
+			QUIETPRINT(_T("\n%lx"), sendData[0]);
+			checksum += sendData[0];
+			bitRate += 8;
+			//发送块大小MSB
+			WriteFile(file, &sendData[1], 1, &dwWritten, NULL);
+			QUIETPRINT(_T("\n%lx"), sendData[1]);
+			checksum += sendData[1];
+			bitRate += 8;
+			break;
+		}
+		//读取下一个目标地址（4个字节，32位）
+		fileStatus = fscanf_s(fh, "%x", &sendData[2]); //MSW[23:16]
+		fileStatus = fscanf_s(fh, "%x", &sendData[3]); //MSW[31:24]
+		fileStatus = fscanf_s(fh, "%x", &sendData[4]); //LSW[7:0]
+		fileStatus = fscanf_s(fh, "%x", &sendData[5]); //LSW[15:8]
+		destAddr = (sendData[3] << 24) | (sendData[2] << 16) |
+			      (sendData[5] << 8) | (sendData[4]);
+		//校验数据地址，如果数据地址在RAM区，则不会下载数据块
+		if (destAddr < 0x80000)
+		{ 
+			//移除忽略的数据块 
+			for (int j = 0; j < blockSize; j++)
+			{
+				fileStatus = fscanf_s(fh, "%x", &sendData[0]);
+				fileStatus = fscanf_s(fh, "%x", &sendData[0]);
+			}
+			blockCount++;
+			pSerialFlash->printfMessage(QString("第%1个数据块被忽略:").arg(blockCount));
+			pSerialFlash->printfMessage(QString("address:0x%1 size:%2").arg(destAddr, 5, 16, QLatin1Char('0')).arg(blockSize));
+		}
+		else
+		{ 
+			//发送块大小LSB
+			WriteFile(file, &sendData[0], 1, &dwWritten, NULL);
+			QUIETPRINT(_T("\n%lx"), sendData[0]);
+			checksum += sendData[0];
+			bitRate += 8;
+			//发送块大小MSB
+			WriteFile(file, &sendData[1], 1, &dwWritten, NULL);
+			QUIETPRINT(_T("\n%lx"), sendData[1]);
+			checksum += sendData[1];
+			bitRate += 8;
+
+			//发送目标地址MSW[23:16]
+			WriteFile(file, &sendData[2], 1, &dwWritten, NULL);
+			QUIETPRINT(_T("\n%lx"), sendData[2]);
+			checksum += sendData[2];
+			bitRate += 8;
+
+			//发送目标地址MSW[31:24]
+			WriteFile(file, &sendData[3], 1, &dwWritten, NULL);
+			QUIETPRINT(_T("\n%lx"), sendData[3]);
+			checksum += sendData[3];
+			bitRate += 8;
+
+			//发送目标地址LSW[7:0]
+			WriteFile(file, &sendData[4], 1, &dwWritten, NULL);
+			QUIETPRINT(_T("\n%lx"), sendData[4]);
+			checksum += sendData[4];
+			bitRate += 8;
+
+			//发送目标地址LSW[15:8]
+			WriteFile(file, &sendData[5], 1, &dwWritten, NULL);
+			QUIETPRINT(_T("\n%lx"), sendData[5]);
+			checksum += sendData[5];
+			bitRate += 8;
+			/*界面发送消息*/
+			blockCount++;
+			pSerialFlash->printfMessage(QString("正在下载第%1个数据块:").arg(blockCount));
+			pSerialFlash->printfMessage(QString("address:0x%1 size:%2").arg(destAddr, 5, 16, QLatin1Char('0')).arg(blockSize));
+
+			//发送块数据
+			for (int j = 0; j < blockSize; j++)
+			{
+				if (((j % g_bBlockSize == 0) && (j > 0)) || ((blockSize < g_bBlockSize) && (j == blockSize)))
+				{
+					//接收校验和LSB
+					dwRead = 0;
+					while (dwRead == 0)
+					{
+						ReadFile(file, &sendData[0], 1, &dwRead, NULL);
+					}
+					//发送ACK信号
+					WriteFile(file, &ack, 1, &dwWritten, NULL);
+					//接收校验和MSB
+					dwRead = 0;
+					while (dwRead == 0)
+					{
+						ReadFile(file, &sendData[1], 1, &dwRead, NULL);
+					}
+					//发送ACK信号
+					WriteFile(file, &ack, 1, &dwWritten, NULL);
+
+					rcvData = sendData[0] | (sendData[1] << 8);
+					//校验
+					if ((checksum & 0xFFFF) != rcvData)
+					{
+						VERBOSEPRINT(_T("\nChecksum does not match... Please press Ctrl-C to abort."));
+						while (1) {}
+					}
+				}
+
+
+				//发送字数据LSB
+				fileStatus = fscanf_s(fh, "%x", &sendData[0]);
+				WriteFile(file, &sendData[0], 1, &dwWritten, NULL);
+				QUIETPRINT(_T("\n%lx"), sendData[0]);
+				checksum += sendData[0];
+				bitRate += 8;
+
+				//发送字数据MSB
+				fileStatus = fscanf_s(fh, "%x", &sendData[0]);
+				WriteFile(file, &sendData[0], 1, &dwWritten, NULL);
+				QUIETPRINT(_T("\n%lx"), sendData[0]);
+				checksum += sendData[0];
+				bitRate += 8;
+			}
+			//接收校验和LSB
+
+			dwRead = 0;
+			while (dwRead == 0)
+			{
+				ReadFile(file, &sendData[0], 1, &dwRead, NULL);
+			}
+			//发送ACK信号
+			WriteFile(file, &ack, 1, &dwWritten, NULL);
+			//接收校验和MSB
+			dwRead = 0;
+			while (dwRead == 0)
+			{
+				ReadFile(file, &sendData[1], 1, &dwRead, NULL);
+			}
+			//发送ACK信号
+			WriteFile(file, &ack, 1, &dwWritten, NULL);
+
+			rcvData = sendData[0] | (sendData[1] << 8);
+			//校验
+			if ((checksum & 0xFFFF) != rcvData)
+			{
+				VERBOSEPRINT(_T("\nChecksum does not match... Please press Ctrl-C to abort."));
+				while (1) {}
+			}
+		}
+
+	}
+	//计算发送的数据速度
+	millis = GetTickCount() - millis;
+	bitRate = bitRate / millis * 1000;
+	QUIETPRINT(_T("\nBit rate /s of transfer was: %f"), bitRate);
+	rcvData = 0;
+	//传递信息给界面
+    pSerialFlash->printfMessage(QString("下载所用时间:%1s").arg((float)millis/1000,3));
+    pSerialFlash->printfMessage(QString("下载速度:%1 bit/s").arg(bitRate));
+}
+//*****************************************************************************
+//函数名称：loadProgram_checksum
+//函数说明：将程序下载到通过传递的句柄标识的设备上，要下载的程序以及与该操作有关的
+//         其他参数通过全局变量由命令行参数控制。
+//传入参数：FILE  *fh    程序文件
+//返回参数：
+//         如果单核成功，则返回1。
+//         双核成功返回2。
+//         失败时返回-1。
+//
+//*****************************************************************************
+//#define checksum_enable 1
+//#define g_bBlockSize 0x80 //发送块数据大小
+//#include <assert.h>
+void loadProgram_checksum1(FILE* fh)
+{
+	unsigned char sendData[8];
+	unsigned int fileStatus;
+	unsigned int rcvData = 0;
+	DWORD dwRead;
+	unsigned int checksum = 0;
+	char ack = 0x2D;
+	assert(g_bBlockSize % 4 == 0);  //因为ECC使用64位或4个字的倍数。％4 == 0
+	DWORD dwWritten;
+	//移除文件中无关信息
+	getc(fh);
+	getc(fh);
+	getc(fh);
+
+	float bitRate = 0;
+	DWORD millis = GetTickCount();
+	//前22个字节为初始化数据
+	for (int i = 0; i < 22; i++)
+	{
+		fileStatus = fscanf_s(fh, "%x", &sendData[0]);
+		//发送字符
+		WriteFile(file, &sendData[0], 1, &dwWritten, NULL);
+		bitRate += 8;
+		checksum += sendData[0];
+	}
+	//接收设备校验和的低字节
+	dwRead = 0;
+	while (dwRead == 0)
+	{
+		ReadFile(file, &sendData[0], 1, &dwRead, NULL);
+	}
+	//发送ACK信号
+	WriteFile(file, &ack, 1, &dwWritten, NULL);
+
+	//接收设备校验和的高字节
+	dwRead = 0;
+	while (dwRead == 0)
+	{
+		ReadFile(file, &sendData[1], 1, &dwRead, NULL);
+	}
+	//发送ACK信号
+	WriteFile(file, &ack, 1, &dwWritten, NULL);
+
+	rcvData = (sendData[1] << 8) + sendData[0];
+	//校验
+	if (checksum != rcvData)
+	{
+		VERBOSEPRINT(_T("\nChecksum does not match... Please press Ctrl-C to abort."));
+		while (1) {}
+	}
+	unsigned int blockCount = 0;
 	while (fileStatus == 1)
 	{
 		unsigned int blockSize;
@@ -159,7 +393,7 @@ void loadProgram_checksum(FILE *fh)
 		checksum += sendData[1];
 		bitRate += 8;
 		//如果块大小为0,则文件结束
-		if (blockSize == 0x0000) 
+		if (blockSize == 0x0000)
 		{
 			break;
 		}
@@ -197,10 +431,10 @@ void loadProgram_checksum(FILE *fh)
 		bitRate += 8;
 
 		/*界面发送消息*/
-        blockCount++;
-        pSerialFlash->printfMessage(QString("正在下载第%1个数据块:").arg(blockCount));
+		blockCount++;
+		pSerialFlash->printfMessage(QString("正在下载第%1个数据块:").arg(blockCount));
 		pSerialFlash->printfMessage(QString("address:0x%1 size:%2").arg(destAddr, 5, 16, QLatin1Char('0')).arg(blockSize));
-		
+
 		//发送块数据
 		for (int j = 0; j < blockSize; j++)
 		{
@@ -228,7 +462,7 @@ void loadProgram_checksum(FILE *fh)
 				if ((checksum & 0xFFFF) != rcvData)
 				{
 					VERBOSEPRINT(_T("\nChecksum does not match... Please press Ctrl-C to abort."));
-					while (1){}
+					while (1) {}
 				}
 			}
 
@@ -268,7 +502,7 @@ void loadProgram_checksum(FILE *fh)
 		if ((checksum & 0xFFFF) != rcvData)
 		{
 			VERBOSEPRINT(_T("\nChecksum does not match... Please press Ctrl-C to abort."));
-			while (1){}
+			while (1) {}
 		}
 	}
 	//计算发送的数据速度
@@ -277,8 +511,8 @@ void loadProgram_checksum(FILE *fh)
 	QUIETPRINT(_T("\nBit rate /s of transfer was: %f"), bitRate);
 	rcvData = 0;
 	//传递信息给界面
-    pSerialFlash->printfMessage(QString("下载所用时间:%1s").arg((float)millis/1000,3));
-    pSerialFlash->printfMessage(QString("下载速度:%1 bit/s").arg(bitRate));
+	pSerialFlash->printfMessage(QString("下载所用时间:%1s").arg((float)millis / 1000, 3));
+	pSerialFlash->printfMessage(QString("下载速度:%1 bit/s").arg(bitRate));
 }
 ///******************************************************************************
 // * 函数名称：f021_DownloadImage
@@ -310,6 +544,7 @@ int f021_DownloadImage(wchar_t* applicationFile)
 	//下载程序文件
 #if checksum_enable
 	loadProgram_checksum(Afh);
+	//loadProgram_checksum1(Afh);
 #else
 	loadProgram(Afh);
 #endif
