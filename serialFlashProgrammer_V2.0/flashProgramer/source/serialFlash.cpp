@@ -1251,31 +1251,7 @@ void checkErrors(void)
 		QUIETPRINT(_T("ERROR: No COM port number was specified. Please use -p to provide one.\n"));
 	}
 }
-//打印错误状态
-void printErrorStatus(uint16_t status)
-{
-	switch (status)
-	{
-	case BLANK_ERROR:
-		cout << "ERROR Status: BLANK_ERROR" << endl;
-		break;
-	case VERIFY_ERROR:
-		cout << "ERROR Status: VERIFY_ERROR" << endl;
-		break;
-	case PROGRAM_ERROR:
-		cout << "ERROR Status: PROGRAM_ERROR" << endl;
-		break;
-	case COMMAND_ERROR:
-		cout << "ERROR Status: COMMAND_ERROR" << endl;
-		break;
-	case UNLOCK_ERROR:
-		cout << "ERROR Status: UNLOCK_ERROR" << endl;
-		break;
-	default:
-		cout << "ERROR Status: Not Recognized Error" << endl;
-		break;
-	}
-}
+
 
 //*****************************************************************************
 //
@@ -1451,6 +1427,44 @@ SerialFlash::~SerialFlash()
 
 }
 /************************************************************************
+* 函数名称：printErrorStatus
+* 函数说明：根据返回的状态码输出错误状态
+* 功能说明：
+* 输入参数：
+*           uint16_t status  状态码
+* 返回参数：
+*************************************************************************/
+void SerialFlash::printErrorStatus(uint16_t status)
+{
+	switch (status)
+	{
+	case BLANK_ERROR:
+		cout << "ERROR Status: BLANK_ERROR" << endl;
+		QTMESSAGE(QString("ERROR:扇区擦除错误(BLANK_ERROR)"));
+		break;
+	case VERIFY_ERROR:
+		cout << "ERROR Status: VERIFY_ERROR" << endl;
+		QTMESSAGE(QString("ERROR:程序校验错误(VERIFY_ERROR)"));
+		break;
+	case PROGRAM_ERROR:
+		cout << "ERROR Status: PROGRAM_ERROR" << endl;
+		QTMESSAGE(QString("ERROR:编程错误(PROGRAM_ERROR)"));
+		break;
+	case COMMAND_ERROR:
+		cout << "ERROR Status: COMMAND_ERROR" << endl;
+		QTMESSAGE(QString("ERROR:命令识别错误(COMMAND_ERROR)"));
+		break;
+	case UNLOCK_ERROR:
+		cout << "ERROR Status: UNLOCK_ERROR" << endl;
+		QTMESSAGE(QString("ERROR:解锁失败错误(UNLOCK_ERROR)"));
+		break;
+	default:
+		cout << "ERROR Status: Not Recognized Error" << endl;
+		QTMESSAGE(QString("ERROR:未知错误"));
+		break;
+	}
+}
+/************************************************************************
 * 函数名称：
 * 函数说明：功能：CPU1升级 DFU_CPU1
 * 功能说明：
@@ -1462,14 +1476,12 @@ int SerialFlash::function_DFU_CPU1()
 	//检查文件 
 	if (!g_pszAppFile)
 	{
-		cout << "错误：未为CPU1闪存编程指定闪存应用程序" << endl;
 		QTMESSAGE(QString("没有可用的APP文件，无法升级."));
 		return 3;
 	}
 	//检查核心驱动
 	if (cpu1 == false)
 	{
-		cout << "错误：引导CPU2并获得SCI控制后，无法在CPU1上执行操作！" << endl;
 		QTMESSAGE(QString("CPU1未连接，无法升级."));
 		return 2;
 	}
@@ -1478,7 +1490,6 @@ int SerialFlash::function_DFU_CPU1()
 	uint32_t packetLength;
 	int iRetCode;
 	packetLength = constructPacket(packet, (uint16_t)DFU_CPU1, 0, NULL);
-	cout << "发送升级命令(f021_SendPacket(DFU_CPU1))" << endl;
 	QTMESSAGE(QString("发送升级命令."));
 	//发送命令包
 	iRetCode = f021_SendPacket(packet, packetLength);
@@ -1492,16 +1503,17 @@ int SerialFlash::function_DFU_CPU1()
 	command = getPacket(&length, data);
 	if (command != DFU_CPU1)
 	{
-		cout << "ERROR with Packet Command!" << endl;
+		QTMESSAGE(QString("反馈包显示固件接收到错误命令"));
 	}
-	if (data[0] != NO_ERROR)
+	//检查状态
+	if (data[0] != PROGRAM_NO_ERROR)
 	{
 		printErrorStatus(data[0]);
-		cout << "ERROR Address: 0x" << hex << formatMemAddr(data[2], data[1]) << endl;
+		cout << "错误地址: 0x" << hex << formatMemAddr(data[2], data[1]) << endl;
 	}
-	else  //if NO_ERROR then statusCode.address or data[2]|data[1] is the EnrtyAddr
+	else  //如果NO_ERROR则statusCode.address:data[2]|data[1]是程序_c_int00的入口地址
 	{
-		cout << endl << "Entry Point Address is: 0x" << hex << setw(4) << setfill('0') << data[2] << hex << setw(4) << setfill('0') << data[1] << endl;
+		cout << endl << "_c_int00入口地址: 0x" << hex << setw(4) << setfill('0') << data[2] << hex << setw(4) << setfill('0') << data[1] << endl;
 	}
 	//记录入口点
 	gu32_branchAddress = formatMemAddr(data[2], data[1]);

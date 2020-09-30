@@ -54,6 +54,7 @@ private slots:
     void vn_lineEdit_enterAddr_editingFinished();//地址输入框输入数据
     void vn_checkBox_bandStatus_stateChange(int);//波特率可配置选择框
     void vn_btn_cleanMessage_clicked();//清除输出消息按钮
+    void vn_btn_viewProgram_clicked();//查看程序信息按钮
 private slots:
     void workThreadStart();//线程启动槽函数
     void workThreadFinish();//线程结束槽函数

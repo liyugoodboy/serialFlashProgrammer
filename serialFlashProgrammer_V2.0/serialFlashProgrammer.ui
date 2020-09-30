@@ -15,28 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QFormLayout" name="formLayout">
-     <item row="1" column="0">
-      <widget class="QPushButton" name="btn_selectProgramFile">
-       <property name="text">
-        <string>选择CPU1程序文件</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLineEdit" name="lineEdit">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QPushButton" name="pushButton_3">
-       <property name="text">
-        <string>选择CPU1内核文件</string>
-       </property>
-      </widget>
-     </item>
+    <layout class="QGridLayout" name="gridLayout_4">
      <item row="0" column="1">
       <widget class="QLineEdit" name="lineEdit_2">
        <property name="enabled">
@@ -44,15 +23,8 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
-      <widget class="QPushButton" name="pushButton">
-       <property name="text">
-        <string>选择CPU2内核文件</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QLineEdit" name="lineEdit_3">
+     <item row="3" column="1">
+      <widget class="QLineEdit" name="lineEditPrg1FilePath">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -65,10 +37,66 @@
        </property>
       </widget>
      </item>
-     <item row="3" column="1">
-      <widget class="QLineEdit" name="lineEditPrg1FilePath">
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="lineEdit_3">
        <property name="enabled">
         <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="lineEdit">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QPushButton" name="pushButton">
+       <property name="text">
+        <string>选择CPU2内核文件</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QPushButton" name="pushButton_3">
+       <property name="text">
+        <string>选择CPU1内核文件</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QPushButton" name="btn_selectProgramFile">
+       <property name="text">
+        <string>选择CPU1程序文件</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QPushButton" name="btn_viewProgram">
+       <property name="text">
+        <string>查看文件</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QPushButton" name="pushButton_4">
+       <property name="text">
+        <string>查看文件</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QPushButton" name="pushButton_5">
+       <property name="text">
+        <string>查看文件</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QPushButton" name="pushButton_6">
+       <property name="text">
+        <string>查看文件</string>
        </property>
       </widget>
      </item>
@@ -357,6 +385,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>btn_viewProgram</sender>
+   <signal>clicked()</signal>
+   <receiver>serialFlashProgrammerClass</receiver>
+   <slot>vn_btn_viewProgram_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>642</x>
+     <y>54</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>659</x>
+     <y>52</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>on_btn_portSearch_clicked()</slot>
@@ -366,5 +410,6 @@
   <slot>vn_lineEdit_enterAddr_editingFinished()</slot>
   <slot>vn_checkBox_bandStatus_stateChange(int)</slot>
   <slot>vn_btn_cleanMessage_clicked()</slot>
+  <slot>vn_btn_viewProgram_clicked()</slot>
  </slots>
 </ui>

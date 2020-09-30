@@ -59,12 +59,12 @@ extern wchar_t* g_pszDeviceName;
 #define RUN_CPU2					    0x0010
 #define RESET_CPU2					0x0020
 /*******************************返回错误码*****************************************/
-#define NO_ERROR					    0x1000
-#define BLANK_ERROR					0x2000
-#define VERIFY_ERROR				    0x3000
-#define PROGRAM_ERROR				    0x4000
-#define COMMAND_ERROR				    0x5000
-#define UNLOCK_ERROR				    0x6000
+#define PROGRAM_NO_ERROR			    0x1000     //无错误
+#define BLANK_ERROR					0x2000     //扇区擦除时校验错误
+#define VERIFY_ERROR				    0x3000     //编程数据校验错误
+#define PROGRAM_ERROR				    0x4000     //数据编程错误
+#define COMMAND_ERROR				    0x5000     //命令接收错误
+#define UNLOCK_ERROR				    0x6000     //解锁失败错误
 /************************************函数声明************************************/
 extern int openCom();
 extern int closeCom();
@@ -77,6 +77,7 @@ class SerialFlash : public QObject
 public:
 	SerialFlash();
 	~SerialFlash();
+	void printErrorStatus(uint16_t status);
 	int function_DFU_CPU1();//升级CPU1功能
 	int function_RUN_CPU1();
 	int function_DFU_CPU2();

@@ -104,6 +104,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ViewProgram.cpp" />
     <QtRcc Include="serialFlashProgrammer.qrc" />
     <QtUic Include="serialFlashProgrammer.ui" />
     <QtMoc Include="serialFlashProgrammer.h" />
@@ -114,12 +115,14 @@
     <ClCompile Include="flashProgramer\source\serialFlash.cpp" />
     <ClCompile Include="serialFlashProgrammer.cpp" />
     <ClCompile Include="main.cpp" />
+    <QtUic Include="viewProgram.ui" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="flashProgramer\include\f021_DownloadImage.h" />
     <ClInclude Include="flashProgramer\include\f021_DownloadKernel.h" />
     <ClInclude Include="flashProgramer\include\f021_SendMessage.h" />
     <ClInclude Include="flashProgramer\include\f05_DownloadImage.h" />
+    <QtMoc Include="ViewProgram.h" />
     <QtMoc Include="flashProgramer\include\serialFlash.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>

@@ -1,5 +1,5 @@
 /************************************************************************
-* 文件名称：
+* 文件名称：C2000系列串口升级程序上位机
 * 文件说明：
 * 功能说明：
 *           1.固定APP程序入口地址：0x84000
@@ -93,9 +93,12 @@ serialFlashProgrammer::serialFlashProgrammer(QWidget* parent)
 	ui.cbox_baud->addItem("38400");
 	ui.cbox_baud->addItem("57600");
 	ui.cbox_baud->addItem("115200");
+	ui.cbox_baud->setCurrentIndex(ui.cbox_baud->findText("115200"));
+	ui.cbox_baud->setEnabled(false);
+
 	//可选框默认选中
-	m_autoBand = true;
-	ui.bandSelectCheckBox->setChecked(true);
+	m_autoBand = false;
+	ui.bandSelectCheckBox->setChecked(false);
 	//设置地址框输入限制
 	QRegExp regExp("[a-fA-F0-9]{6}");
 	ui.enterAddrLineEdit->setValidator(new QRegExpValidator(regExp, this));
@@ -444,6 +447,18 @@ void serialFlashProgrammer::vn_checkBox_bandStatus_stateChange(int state)
 	}
 }
 /************************************************************************
+* 函数名称：vn_btn_viewProgram_clicked
+* 函数说明：查看程序信息按钮->单击->槽
+* 功能说明：
+* 输入参数：
+* 返回参数：
+*************************************************************************/
+void serialFlashProgrammer::vn_btn_viewProgram_clicked()
+{
+	//调用信息窗口
+
+}
+/************************************************************************
 * 函数名称：vn_btn_cleanMessage_clicked
 * 函数说明：清除消息按钮->单击->槽
 * 功能说明：
@@ -567,9 +582,9 @@ void serialFlashProgrammer::programToSci8(QString path,QString programName)
 	outputMessage(QString("文件转换成功"));
 }
 /************************************************************************
-* 函数名称：
+* 函数名称：appFileMessage
 * 函数说明：转换程序校验及信息输出
-* 功能说明：
+* 功能说明：完成对转换完成的APP文件内容进行校验，并输出相关信息到消息框。
 * 输入参数：
 *           QString       name      转换完成的文件名称
 *           appFileInfo*  fileInfo  转换前文件信息指针
@@ -578,11 +593,10 @@ void serialFlashProgrammer::programToSci8(QString path,QString programName)
 void serialFlashProgrammer::appFileMessage(QString name,appFileInfo* info)
 {
 	/*获取转换文件信息(解析文件结构)*/
-	//块地址及大小
-	unsigned int blackNumber = 0;
-	unsigned int allBlackSize = 0;
-	unsigned int blackSize = 0;
-	unsigned int blackAddr = 0;
+	unsigned int blackNumber = 0;//数据块数量
+	unsigned int allBlackSize = 0;//数据块总大小
+	unsigned int blackSize = 0;//数据块大小
+	unsigned int blackAddr = 0;//数据块地址
     //打开文件
 	QFile programFile(name);
 	if (!programFile.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -591,7 +605,7 @@ void serialFlashProgrammer::appFileMessage(QString name,appFileInfo* info)
 	}
 	//设置文本流
 	QTextStream in(&programFile);
-	/*获取入口地址*/
+	/*获取c_int00_()入口地址*/
 	in.seek(57);//入口地址偏移量
 	unsigned int array[4];
 	QString str;
@@ -606,7 +620,6 @@ void serialFlashProgrammer::appFileMessage(QString name,appFileInfo* info)
 	array[1] = array[1] << 24;
 	array[3] = array[3] << 8;
 	unsigned int addr = array[0] + array[1] + array[2] + array[3];
-	qDebug() << hex << showbase << addr << endl;
 
 	//获取所有块信息
 	while (blackNumber < MAX_BLACK_NUMBER)
@@ -622,6 +635,7 @@ void serialFlashProgrammer::appFileMessage(QString name,appFileInfo* info)
 		//如果块大小为0则直接退出
 		if (blackSize == 0) { break; }
 		allBlackSize += blackSize;
+
 		//获取块地址
 		for (i = 0; i < 4; i++)
 		{
@@ -632,6 +646,11 @@ void serialFlashProgrammer::appFileMessage(QString name,appFileInfo* info)
 		array[1] = array[1] << 24;
 		array[3] = array[3] << 8;
 		blackAddr = array[0] + array[1] + array[2] + array[3];
+		//校验地址是否128位对齐
+		if ((blackAddr % 8) != 0)
+		{
+			outputMessage("应用程序数据未进行128位对齐，将会导致编程失败，无法进行升级", MSG_ERROR | MSG_WITH_TIME);
+		}
 		//数据地址与booltloader2程序段冲突
 		if (blackAddr < 0x84000 && blackAddr > 0x80000)
 		{
@@ -642,8 +661,6 @@ void serialFlashProgrammer::appFileMessage(QString name,appFileInfo* info)
 		{
 			outputMessage("应用程序数据在RAM区，RAM部分不会被下载，请检查应用程序", MSG_ERROR | MSG_WITH_TIME);
 		}
-		//块信息后位置
-		qDebug() << in.pos();
 		//偏移到下一个块
 		blackNumber++;
 		//TODO:此处无法通过计算位置偏移加速读取信息，因为位置偏移量无法计算。
@@ -670,7 +687,9 @@ void serialFlashProgrammer::appFileMessage(QString name,appFileInfo* info)
 	outputMessage(QString("程序路径：") + info->appFileDir, MSG_TEXT);
 	outputMessage(QString("程序名称：") + info->appFileName, MSG_TEXT);
 	outputMessage(QString("_c_int00:0x%1").arg(addr, 4, 16, QLatin1Char('0')), MSG_TEXT);
-	outputMessage(QString("块数量:%1").arg(blackNumber), MSG_TEXT);
+
+
+	outputMessage(QString("数据块总数量:%1").arg(blackNumber), MSG_TEXT);
 	outputMessage(QString("数据总大小:%1").arg(allBlackSize), MSG_TEXT);
 	outputMessage(QString("预计下载用时:%1s").arg(info->estimatedTime,3), MSG_TEXT);
 	outputMessage(QString("*******************************************"), MSG_TEXT);
